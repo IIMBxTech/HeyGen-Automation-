@@ -52,9 +52,10 @@ def load_json_dict(filepath):
 FORCE_TRANSLATE = load_json_dict("force_translate.json")
 DO_NOT_TRANSLATE = load_json_list("do_not_translate.json")
 
-def log_job(identifier: str, status: str, files_count: int = 1, error: str = ""):
+def log_job(job_id: str, identifier: str, status: str, files_count: int = 1, error: str = ""):
     logs = load_json_list(LOGS_FILE)
     logs.insert(0, {
+        "job_id": job_id,
         "timestamp": datetime.now().isoformat(),
         "url": identifier,
         "status": status,
@@ -224,12 +225,14 @@ def process_job(job_id: str, urls: List[str], file_paths: List[str], file_names:
             
         JOBS[job_id]["status"] = "done"
         JOBS[job_id]["results"] = final_results
-        log_job(identifier, "Success", len(final_results))
+        log_job(job_id, identifier, "Success", len(final_results))
         
     except Exception as e:
         JOBS[job_id]["status"] = "failed"
         JOBS[job_id]["error"] = str(e)
-        log_job(job_id, "Failed", 0, str(e))
+        # Handle case where identifier might not be defined if it crashes early
+        log_identifier = identifier if 'identifier' in locals() else (", ".join(urls) if urls else "Unknown Upload")
+        log_job(job_id, log_identifier, "Failed", 0, str(e))
 
 @app.post("/api/process")
 async def start_process(

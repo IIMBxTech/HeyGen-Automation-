@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 export default function Logs() {
   const [logs, setLogs] = useState<any[]>([]);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/logs`)
@@ -15,6 +16,52 @@ export default function Logs() {
       })
       .catch(err => console.error("Failed to fetch logs", err));
   }, []);
+
+  const handleDownload = async (jobId: string) => {
+    setDownloadingId(jobId);
+    try {
+      const res = await fetch(`/api/status/${jobId}`);
+      if (!res.ok) {
+        alert("File no longer available (server memory may have been cleared).");
+        setDownloadingId(null);
+        return;
+      }
+      const data = await res.json();
+      if (data.status !== "done" || !data.results) {
+        alert("Results not found or job incomplete.");
+        setDownloadingId(null);
+        return;
+      }
+      
+      data.results.forEach((result: any) => {
+        let content = "";
+        result.data.forEach((item: any) => {
+          const formatTime = (seconds: number) => {
+            const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toFixed(3).padStart(6, '0').replace('.', ',');
+            return `${h}:${m}:${s}`;
+          };
+          content += `${item.id}\n`;
+          content += `${formatTime(item.start)} --> ${formatTime(item.end)}\n`;
+          content += `${item.hindi}\n\n`;
+        });
+        
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = result.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+    } catch (err) {
+      alert("Error downloading file.");
+    }
+    setDownloadingId(null);
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -33,11 +80,12 @@ export default function Logs() {
               <th className="px-6 py-4 font-medium text-zinc-300">Video URL</th>
               <th className="px-6 py-4 font-medium text-zinc-300">Status</th>
               <th className="px-6 py-4 font-medium text-zinc-300">Segments</th>
+              <th className="px-6 py-4 font-medium text-zinc-300">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
             {logs.length === 0 ? (
-               <tr><td colSpan={4} className="px-6 py-8 text-center text-zinc-500">No logs found</td></tr>
+               <tr><td colSpan={5} className="px-6 py-8 text-center text-zinc-500">No logs found</td></tr>
             ) : (
               logs.map((log, i) => (
                 <tr key={i} className="hover:bg-white/[0.02] transition-colors">
@@ -50,6 +98,17 @@ export default function Logs() {
                     {log.error && <p className="text-xs text-red-400 mt-1">{log.error}</p>}
                   </td>
                   <td className="px-6 py-4 text-zinc-300">{log.segments}</td>
+                  <td className="px-6 py-4">
+                    {log.status === 'Success' && log.job_id && (
+                      <button 
+                        onClick={() => handleDownload(log.job_id)}
+                        disabled={downloadingId === log.job_id}
+                        className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {downloadingId === log.job_id ? '...' : 'Download SRT'}
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))
             )}

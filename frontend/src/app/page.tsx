@@ -48,7 +48,6 @@ export default function Dashboard() {
           setStage("done");
           setResultsData(statusData.results);
           setStatus("complete");
-          localStorage.removeItem('activeJobId');
         } else {
           setProgress(statusData.progress);
           setTotalSegments(statusData.total);
