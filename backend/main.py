@@ -28,7 +28,7 @@ app.add_middleware(
 
 try:
     print("Loading Whisper model...")
-    whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
+    whisper_model = WhisperModel("tiny", device="cpu", compute_type="int8")
 except Exception as e:
     print(f"Failed to load whisper model: {e}")
     whisper_model = None
