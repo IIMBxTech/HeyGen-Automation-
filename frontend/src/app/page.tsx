@@ -11,6 +11,7 @@ export default function Dashboard() {
   const [progress, setProgress] = useState(0);
   const [totalSegments, setTotalSegments] = useState(0);
   const [stage, setStage] = useState(""); // uploading, downloading, transcribing, translating
+  const [selectedFileIndex, setSelectedFileIndex] = useState(0);
   const [transcribeCreep, setTranscribeCreep] = useState(30);
   const creepRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -89,6 +90,7 @@ export default function Dashboard() {
     setProgress(0);
     setTotalSegments(0);
     setStage("uploading");
+    setSelectedFileIndex(0);
 
     try {
       const formData = new FormData();
@@ -331,17 +333,35 @@ export default function Dashboard() {
             Review the generated translations below. You can click into any Hindi text box to make manual edits. When you are done, click the big Download button above.
           </p>
 
-          <div className="space-y-8">
-            {resultsData.map((fileResult, fileIndex) => (
-              <div key={fileIndex} className="glass-panel rounded-2xl overflow-hidden border border-white/10">
+          <div className="space-y-6">
+            {resultsData.length > 1 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {resultsData.map((file, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedFileIndex(i)}
+                    className={`px-4 py-2 text-sm font-medium rounded-xl transition-colors border ${
+                      selectedFileIndex === i
+                        ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20'
+                        : 'bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10'
+                    }`}
+                  >
+                    {file.filename.replace(/^Hindi_/, '')}
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {resultsData[selectedFileIndex] && (
+              <div className="glass-panel rounded-2xl overflow-hidden border border-white/10">
                 <div className="bg-white/5 px-6 py-4 border-b border-white/10 font-semibold text-lg flex items-center justify-between">
-                  {fileResult.filename}
+                  {resultsData[selectedFileIndex].filename}
                   <span className="text-xs font-normal text-zinc-400 bg-black/30 px-3 py-1 rounded-full">
-                    {fileResult.data.length} segments
+                    {resultsData[selectedFileIndex].data.length} segments
                   </span>
                 </div>
                 <div className="p-0 divide-y divide-white/5">
-                  {fileResult.data.map((segment: any, segmentIndex: number) => (
+                  {resultsData[selectedFileIndex].data.map((segment: any, segmentIndex: number) => (
                     <div key={segment.id} className="p-6 flex flex-col md:flex-row gap-6 hover:bg-white/5 transition-colors group">
                       {/* Timeline / ID */}
                       <div className="text-xs text-zinc-500 font-mono w-16 pt-1 shrink-0">
@@ -364,7 +384,7 @@ export default function Dashboard() {
                         </label>
                         <textarea
                           value={segment.hindi}
-                          onChange={(e) => handleTextChange(fileIndex, segmentIndex, e.target.value)}
+                          onChange={(e) => handleTextChange(selectedFileIndex, segmentIndex, e.target.value)}
                           className="w-full bg-black/20 hover:bg-black/40 focus:bg-black/40 border border-transparent hover:border-white/10 focus:border-blue-500 rounded-lg px-3 py-2 text-sm text-white focus:outline-none transition-all resize-y min-h-[60px]"
                         />
                       </div>
@@ -372,7 +392,7 @@ export default function Dashboard() {
                   ))}
                 </div>
               </div>
-            ))}
+            )}
           </div>
         </section>
       )}
