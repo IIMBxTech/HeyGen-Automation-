@@ -20,7 +20,7 @@ export default function Glossary() {
   }, []);
 
   const fetchGlossary = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/glossary`)
+    fetch(`/api/glossary`)
       .then(res => res.json())
       .then(data => {
         setEntries(data.entries || []);
@@ -59,7 +59,7 @@ export default function Glossary() {
     
     setIsAdding(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/glossary`, {
+      const res = await fetch(`/api/glossary`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -6,7 +6,7 @@ export default function Logs() {
   const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/logs`)
+    fetch(`/api/logs`)
       .then(res => res.json())
       .then(data => {
         if (data && data.logs) {

@@ -25,7 +25,7 @@ export default function Dashboard() {
     setStatus("processing");
     const pollInterval = setInterval(async () => {
       try {
-        const statusRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/status/${jobId}`);
+        const statusRes = await fetch(`/api/status/${jobId}`);
         if (!statusRes.ok) {
           if (statusRes.status === 404) {
              clearInterval(pollInterval);
@@ -100,7 +100,7 @@ export default function Dashboard() {
         }
       }
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/process`, {
+      const res = await fetch(`/api/process`, {
         method: "POST",
         body: formData
       });
